@@ -1,7 +1,7 @@
 var utils = require('../../lib/utils.js');
 
 module.exports = function(RED) {
-  function buildArgs(chatId, payload, ...keys) {
+  function buildArgs(payload, ...keys) {
     var values = [];
     var n = keys.length;
 
@@ -10,7 +10,7 @@ module.exports = function(RED) {
       delete payload[keys[i]];
     }
 
-    return [chatId, ...values, payload];
+    return [...values, payload];
   }
 
   function PayloadNode(config) {
@@ -91,23 +91,31 @@ module.exports = function(RED) {
         }
       }
 
-      switch(sendMethod) {
-        case "sendMessage":    args = buildArgs(chatId, payload, "text"); break;
-        case "sendPhoto":      args = buildArgs(chatId, payload, "photo"); break;
-        case "sendAudio":      args = buildArgs(chatId, payload, "audio"); break;
-        case "sendDocument":   args = buildArgs(chatId, payload, "document"); break;
-        case "sendSticker":    args = buildArgs(chatId, payload, "sticker"); break;
-        case "sendVideo":      args = buildArgs(chatId, payload, "video"); break;
-        case "sendVoice":      args = buildArgs(chatId, payload, "voice"); break;
-        case "sendVideoNote":  args = buildArgs(chatId, payload, "video_note"); break;
-        case "sendMediaGroup": args = buildArgs(chatId, payload, "media"); break;
-        case "sendLocation":   args = buildArgs(chatId, payload, "latitude", "longitude"); break;
-        case "sendVenue":      args = buildArgs(chatId, payload, "latitude", "longitude", "title", "address"); break;
-        case "sendContact":    args = buildArgs(chatId, payload, "phone_number", "first_name"); break;
-        case "sendChatAction": args = buildArgs(chatId, payload, "chat_action"); break;
+      payload.chat_id = chatId;
 
-        case "answerCallbackQuery": args = buildArgs(chatId, payload, "callback_query_id"); break;
-        case "editMessageReplyMarkup": args = buildArgs(chatId, payload, "reply_markup"); break;
+      switch(sendMethod) {
+        case "sendMessage":    args = buildArgs(payload, "chat_id", "text"); break;
+        case "sendPhoto":      args = buildArgs(payload, "chat_id", "photo"); break;
+        case "sendAudio":      args = buildArgs(payload, "chat_id", "audio"); break;
+        case "sendDocument":   args = buildArgs(payload, "chat_id", "document"); break;
+        case "sendSticker":    args = buildArgs(payload, "chat_id", "sticker"); break;
+        case "sendVideo":      args = buildArgs(payload, "chat_id", "video"); break;
+        case "sendVoice":      args = buildArgs(payload, "chat_id", "voice"); break;
+        case "sendVideoNote":  args = buildArgs(payload, "chat_id", "video_note"); break;
+        case "sendMediaGroup": args = buildArgs(payload, "chat_id", "media"); break;
+        case "sendLocation":   args = buildArgs(payload, "chat_id", "latitude", "longitude"); break;
+        case "sendVenue":      args = buildArgs(payload, "chat_id", "latitude", "longitude", "title", "address"); break;
+        case "sendContact":    args = buildArgs(payload, "chat_id", "phone_number", "first_name"); break;
+        case "sendChatAction": args = buildArgs(payload, "chat_id", "chat_action"); break;
+
+        case "answerCallbackQuery":     args = buildArgs(payload, "chat_id", "callback_query_id"); break;
+        case "editMessageText":         args = buildArgs(payload, "text"); break;
+        case "editMessageCaption":      args = buildArgs(payload, "caption"); break;
+        case "editMessageReplyMarkup":  args = buildArgs(payload, "reply_markup"); break;
+        case "editMessageLiveLocation": args = buildArgs(payload, "latitude", "longitude"); break;
+        case "stopMessageLiveLocation": args = buildArgs(payload); break;
+        
+        default: node.warn("unsupported send method:" + sendMethod);
       }
 
       if (args.length > 0) {
